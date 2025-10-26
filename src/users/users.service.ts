@@ -8,17 +8,24 @@ import {
 import { Model } from 'mongoose';
 
 import * as argon2 from 'argon2';
+import { v4 as uuidv4 } from 'uuid';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { StorageService } from 'src/storage/storage.service';
+import { UpdateMyInfoDto } from './dto/update-my-info.dto';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    private storageService: StorageService,
+    @InjectModel(User.name) private userModel: Model<User>,
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const { email, phoneNumber, password } = createUserDto;
@@ -136,7 +143,41 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async updateMyInfo(
+    id: string,
+    updateMyInfoDto: UpdateMyInfoDto,
+  ): Promise<User> {
+    const { name, phoneNumber } = updateMyInfoDto;
+
+    if (phoneNumber) {
+      const existingUser = await this.userModel.findOne({
+        phoneNumber: phoneNumber,
+        _id: { $ne: id },
+      });
+      if (existingUser) {
+        throw new BadRequestException(
+          `El número de teléfono '${phoneNumber}' ya está en uso.`,
+        );
+      }
+    }
+
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      id,
+      {
+        name: name,
+        phoneNumber: phoneNumber,
+      },
+      { new: true },
+    );
+
+    if (!updatedUser) {
+      throw new NotFoundException(`Usuario con ID '${id}' no encontrado.`);
+    }
+
+    return plainToInstance(User, updatedUser.toObject());
+  }
+
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     if (updateUserDto.email || updateUserDto.phoneNumber) {
       const existingUser = await this.userModel.findOne({
         $or: [
@@ -189,6 +230,7 @@ export class UsersService {
 
     return { message: `User with ID '${id}' successfully deleted.` };
   }
+
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleUnverifiedUserCleanup() {
     this.logger.log('Running unverified user cleanup task...');
@@ -213,5 +255,45 @@ export class UsersService {
     } catch (error) {
       this.logger.error('Error during unverified user cleanup:', error);
     }
+  }
+
+  async updateProfilePicture(
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<User> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID '${userId}' not found.`);
+    }
+
+    // 1. (Opcional) Borrar la imagen antigua si existe
+    const oldImageUrl = user.profileImageUrl;
+    if (oldImageUrl) {
+      await this.storageService.deleteFile(oldImageUrl);
+    }
+
+    // 2. Definir la lógica de negocio (path y nombre)
+    // (Usando la recomendación de nombre de archivo seguro)
+    const extension = file.originalname.split('.').pop();
+    const filename = `${uuidv4()}.${extension}`;
+    const key = `profile-pictures/${userId}/${filename}`; // Key completa
+
+    // 3. Subir el nuevo archivo usando el servicio genérico
+    const imageUrl = await this.storageService.uploadFile(file, key);
+
+    // 4. Actualizar el documento del usuario
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      userId,
+      { profileImageUrl: imageUrl },
+      { new: true }, // Return the updated document
+    );
+
+    if (!updatedUser) {
+      throw new InternalServerErrorException(
+        'Failed to update user profile picture.',
+      );
+    }
+
+    return plainToInstance(User, updatedUser.toObject());
   }
 }

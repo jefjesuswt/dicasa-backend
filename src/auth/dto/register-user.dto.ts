@@ -5,6 +5,7 @@ export class RegisterUserDto {
   email: string;
 
   @MinLength(6)
+  @IsString()
   password: string;
 
   @IsString()

@@ -22,6 +22,8 @@ import { UsersService } from 'src/users/users.service';
 import { MailService } from 'src/mail/mail.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyCodeDto } from './dto/verify-code.dto';
+import { ChangePasswordDto } from './dto/changePassword.dto';
 
 @Injectable()
 export class AuthService {
@@ -44,7 +46,7 @@ export class AuthService {
 
     return {
       message:
-        'Registration successful. Please check your email to confirm your account.',
+        'Se ha enviado un correo de confirmación a la dirección proporcionada.',
     };
   }
 
@@ -54,18 +56,18 @@ export class AuthService {
     const user = await this.userService.findOneByEmail(email, true);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Correo o contraseña incorrectos.');
     }
 
     if (!user.isEmailVerified) {
       throw new UnauthorizedException(
-        'Please confirm your email before logging in.',
+        'Por favor, confirma tu correo antes de iniciar sesión.',
       );
     }
 
     const isPasswordCorrect = await argon2.verify(user.password, password);
     if (!isPasswordCorrect) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Correo o contraseña incorrectos.');
     }
     const userData = plainToInstance(User, user.toObject());
 
@@ -85,39 +87,20 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: string, roles: string[]): Promise<JwtResponse> {
-    const user = await this.userService.findOneById(userId);
-    if (!user) {
-      throw new UnauthorizedException('User not found.');
-    }
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('User not active.');
-    }
-
-    const tokens = await this.getToken({ userId }, roles);
-
-    return tokens;
-  }
-
   private async getToken(
     payload: JwtPayload,
     roles: string[],
   ): Promise<JwtResponse> {
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-      expiresIn: this.configService.get<number>('JWT_EXPIRATION', 900),
+      expiresIn: parseInt(
+        this.configService.get<string>('JWT_ACCESS_EXPIRATION', '900'), // Get as string, default '900'
+        10, // Parse as base-10 integer
+      ),
     });
     const response: JwtResponse = {
-      accessToken,
+      accessToken: accessToken,
     };
-    if (!roles.includes('ADMIN') && !roles.includes('SUPERADMIN')) {
-      const refreshToken = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.get<number>('JWT_EXPIRATION', 604800),
-      });
-      response.refreshToken = refreshToken;
-    }
     return response;
   }
 
@@ -132,7 +115,7 @@ export class AuthService {
     });
 
     const confirmationLink = `${this.configService.get(
-      'API_URL',
+      'FRONTEND_URL',
     )}/auth/confirm-email?token=${token}`;
 
     await this.mailService.sendEmail(
@@ -154,7 +137,9 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_CONFIRM_SECRET'),
       });
     } catch (error) {
-      throw new UnauthorizedException('Invalid or expired confirmation token');
+      throw new UnauthorizedException(
+        'Token de confirmación no válido o caducado.',
+      );
     }
 
     const user = await this.userService.markEmailAsVerified(payload.userId);
@@ -179,15 +164,15 @@ export class AuthService {
     }
 
     if (user.isEmailVerified) {
-      throw new BadRequestException('User is already verified.');
+      throw new BadRequestException('La cuenta ya ha sido verificada.');
     }
 
     try {
       await this.sendConfirmationEmail(user);
     } catch (error) {
-      console.error('Error resending confirmation email:', error);
+      console.error('Error al reenviar correo de confirmación:', error);
       throw new InternalServerErrorException(
-        'Could not resend confirmation email.',
+        'No se pudo reenviar el correo de confirmación.',
       );
     }
   }
@@ -199,7 +184,7 @@ export class AuthService {
       return;
     }
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const hashedCode = crypto
       .createHash('sha256')
       .update(resetCode)
@@ -208,17 +193,42 @@ export class AuthService {
     const expires = new Date(Date.now() + 10 * 60 * 1000);
 
     await this.userService.setPasswordResetToken(user._id, hashedCode, expires);
-
+    const resetLink = `${frontendUrl}/auth/set-password?email=${encodeURIComponent(user.email)}&code=${resetCode}`;
     await this.mailService.sendEmail(
       user.email,
       'Restablece tu contraseña - Dicasa Group',
       'password-reset',
       {
         name: user.name,
-        resetCode: resetCode, //  codigo simple (ej: "123456")
-        resetLink: '#', //  placeholder para la variable {{resetLink}}
+        resetCode, //  codigo simple (ej: "123456")
+        resetLink,
       },
     );
+  }
+
+  async verifyResetCode(verifyCodeDto: VerifyCodeDto): Promise<boolean> {
+    const { email, code } = verifyCodeDto;
+    const user = await this.userService.findOneByEmail(email, true); // Necesitamos los campos privados
+
+    if (
+      !user ||
+      !user.passwordResetToken ||
+      !user.passwordResetExpires ||
+      new Date() > user.passwordResetExpires
+    ) {
+      throw new UnauthorizedException('El código ha caducado o es inválido.');
+    }
+
+    const hashedInputCode = crypto
+      .createHash('sha256')
+      .update(code)
+      .digest('hex');
+
+    if (hashedInputCode !== user.passwordResetToken) {
+      throw new UnauthorizedException('Código inválido.');
+    }
+
+    return true;
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
@@ -231,7 +241,7 @@ export class AuthService {
       !user.passwordResetExpires ||
       new Date() > user.passwordResetExpires
     ) {
-      throw new UnauthorizedException('Code has expired or is invalid');
+      throw new UnauthorizedException('El código ha caducado o es inválido.');
     }
 
     const hashedInputCode = crypto
@@ -240,11 +250,29 @@ export class AuthService {
       .digest('hex');
 
     if (hashedInputCode !== user.passwordResetToken) {
-      throw new UnauthorizedException('Invalid code');
+      throw new UnauthorizedException('Código inválido.');
     }
 
     const newPasswordHash = await argon2.hash(newPassword);
     await this.userService.updatePassword(user._id, newPasswordHash);
-    return { message: 'Password has been reset successfully.' };
+    return { message: 'La contraseña se ha restablecido correctamente.' };
+  }
+
+  async changePassword(email: string, changePasswordDto: ChangePasswordDto) {
+    const { password, newPassword } = changePasswordDto;
+    const user = await this.userService.findOneByEmail(email, true);
+
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado.');
+    }
+
+    const isPasswordCorrect = await argon2.verify(user.password, password);
+    if (!isPasswordCorrect) {
+      throw new UnauthorizedException('Contraseña incorrecta.');
+    }
+
+    const newPasswordHash = await argon2.hash(newPassword);
+    await this.userService.updatePassword(user._id, newPasswordHash);
+    return { message: 'La contraseña se ha restablecido correctamente.' };
   }
 }

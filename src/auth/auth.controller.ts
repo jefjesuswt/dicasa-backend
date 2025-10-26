@@ -3,16 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   UseInterceptors,
   ClassSerializerInterceptor,
   UseGuards,
   Request,
   Query,
-  Res,
-  Response,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -23,8 +18,9 @@ import { AuthGuard } from './guards/auth.guard';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { ResendConfirmationDto } from './dto/resend-confirmation.dto';
+import { VerifyCodeDto } from './dto/verify-code.dto';
+import { ChangePasswordDto } from './dto/changePassword.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -51,13 +47,6 @@ export class AuthController {
     return this.authService.checkToken(user);
   }
 
-  @Post('/refresh')
-  @UseGuards(RefreshTokenGuard)
-  async refreshTokens(@Request() req: Request) {
-    const user = req['user'];
-    return await this.authService.refreshTokens(user._id, user.roles);
-  }
-
   @Get('/confirm-email')
   @UseInterceptors(ClassSerializerInterceptor)
   async confirmEmail(@Query('token') token: string): Promise<AuthResponseDto> {
@@ -72,7 +61,7 @@ export class AuthController {
     await this.authService.resendConfirmationEmail(resendConfirmationDto.email);
     return {
       message:
-        'If an account with that email exists and is not verified, a new confirmation email has been sent.',
+        'Si una cuenta con ese correo existe, se ha enviado un correo de confirmación.',
     };
   }
 
@@ -82,13 +71,34 @@ export class AuthController {
     await this.authService.sendPasswordResetEmail(forgotPasswordDto);
     return {
       message:
-        'If an account with that email exists, a reset code has been sent.',
+        'Se ha enviado un correo de recuperación de contraseña a la dirección proporcionada.',
     };
+  }
+
+  @Post('verify-reset-code')
+  @HttpCode(HttpStatus.OK)
+  async verifyResetCode(
+    @Body() verifyCodeDto: VerifyCodeDto,
+  ): Promise<{ valid: boolean }> {
+    const isValid = await this.authService.verifyResetCode(verifyCodeDto);
+
+    return { valid: true };
   }
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @Post('change-password')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @Request() req: Request,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    const user = req['user'];
+    return this.authService.changePassword(user.email, changePasswordDto);
   }
 }

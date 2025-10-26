@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
 import { MailService } from './mail/mail.service';
 import { ScheduleModule } from '@nestjs/schedule';
+import { StorageModule } from './storage/storage.module';
+import { PropertiesModule } from './properties/properties.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     UsersModule,
     MailModule,
+    StorageModule,
+    PropertiesModule,
   ],
   controllers: [],
   providers: [MailService],
