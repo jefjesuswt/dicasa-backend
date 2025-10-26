@@ -1,0 +1,52 @@
+# Nombre del workflow, aparecerá en la pestaña "Actions" de GitHub
+name: CI/CD - Build and Push Docker Image
+
+# ----- Disparador (Trigger) -----
+# Esto le dice a GitHub cuándo debe ejecutarse esta acción.
+on:
+  push:
+    branches:
+      - main # Se ejecuta solo cuando haces 'push' a la rama 'main'
+
+# ----- Permisos -----
+# Le damos permisos al workflow para escribir en el registry de paquetes (GHCR)
+permissions:
+  contents: read
+  packages: write
+
+# ----- Trabajos (Jobs) -----
+jobs:
+  build-and-push:
+    # La máquina virtual que usará (Ubuntu es la estándar)
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clonar tu repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Iniciar sesión en GitHub Container Registry (GHCR)
+      # Usa un token automático de GitHub, es más seguro que el PAT
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }} # Tu usuario de GitHub
+          password: ${{ secrets.GITHUB_TOKEN }} # Un token mágico y seguro de GitHub
+
+      # 3. Construir y subir la imagen de Docker
+      # Esta acción hace el 'build', 'tag' y 'push' en un solo paso
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Usa el directorio actual para el 'build'
+          file: ./Dockerfile # Apunta a tu Dockerfile
+          push: true # ¡Sí, queremos subir la imagen!
+
+          # ---- Aquí creamos las etiquetas (tags) ----
+          # Usamos tu usuario, el nombre 'dicasa-backend' y dos etiquetas:
+          # 1. 'latest': para que Dokploy siempre sepa cuál es la última
+          # 2. El 'SHA' del commit: un ID único para cada versión
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/dicasa-backend:latest
+            ghcr.io/${{ github.repository_owner }}/dicasa-backend:${{ github.sha }}

@@ -1,5 +1,3 @@
-// src/users/dto/update-user.dto.ts
-
 import {
   IsArray,
   IsBoolean,

@@ -17,9 +17,9 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtResponse } from './interfaces/jwt-response.interface';
-import { User } from 'src/users/entities/user.entity';
-import { UsersService } from 'src/users/users.service';
-import { MailService } from 'src/mail/mail.service';
+import { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';

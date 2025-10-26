@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../../users/users.service';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

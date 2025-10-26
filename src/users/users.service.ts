@@ -16,7 +16,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { StorageService } from 'src/storage/storage.service';
+import { StorageService } from '../storage/storage.service';
 import { UpdateMyInfoDto } from './dto/update-my-info.dto';
 
 @Injectable()
