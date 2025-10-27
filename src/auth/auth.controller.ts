@@ -21,17 +21,21 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResendConfirmationDto } from './dto/resend-confirmation.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { ChangePasswordDto } from './dto/changePassword.dto';
+import { Public } from './decorators/public.decorator';
 
+@UseGuards(AuthGuard)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('/login')
   @UseInterceptors(ClassSerializerInterceptor)
   login(@Body() loginUserDto: LoginUserDto): Promise<AuthResponseDto> {
     return this.authService.login(loginUserDto);
   }
 
+  @Public()
   @Post('/register')
   @UseInterceptors(ClassSerializerInterceptor)
   register(
@@ -41,18 +45,20 @@ export class AuthController {
   }
 
   @Get('/checkToken')
-  @UseGuards(AuthGuard)
+  @UseInterceptors(ClassSerializerInterceptor)
   checkToken(@Request() req: Request): Promise<AuthResponseDto> {
     const user = req['user'];
     return this.authService.checkToken(user);
   }
 
+  @Public()
   @Get('/confirm-email')
   @UseInterceptors(ClassSerializerInterceptor)
   async confirmEmail(@Query('token') token: string): Promise<AuthResponseDto> {
     return await this.authService.confirmEmail(token);
   }
 
+  @Public()
   @Post('resend-confirmation')
   @HttpCode(HttpStatus.OK)
   async resendConfirmation(
@@ -65,6 +71,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('/forgot-password')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
@@ -75,6 +82,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('verify-reset-code')
   @HttpCode(HttpStatus.OK)
   async verifyResetCode(
@@ -82,9 +90,10 @@ export class AuthController {
   ): Promise<{ valid: boolean }> {
     const isValid = await this.authService.verifyResetCode(verifyCodeDto);
 
-    return { valid: true };
+    return { valid: isValid };
   }
 
+  @Public()
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
@@ -92,7 +101,6 @@ export class AuthController {
   }
 
   @Post('change-password')
-  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   async changePassword(
     @Request() req: Request,

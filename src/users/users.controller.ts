@@ -26,7 +26,9 @@ import { StorageService } from '../storage/storage.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from './entities/user.entity';
 import { UpdateMyInfoDto } from './dto/update-my-info.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
 
+@UseGuards(AuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(
@@ -36,14 +38,13 @@ export class UsersController {
 
   @Post('/create')
   @UseInterceptors(ClassSerializerInterceptor)
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
   @Put('/me/picture')
-  @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('profileImage')) // Matches frontend field name
   @UseInterceptors(ClassSerializerInterceptor)
   async uploadProfilePicture(
@@ -51,9 +52,7 @@ export class UsersController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          // Example: 5MB limit
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
-          // Example: Allow common image types
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB limit
           new FileTypeValidator({ fileType: '.(png|jpeg|jpg|webp|gif)' }),
         ],
       }),
@@ -71,14 +70,13 @@ export class UsersController {
 
   @Get()
   @UseInterceptors(ClassSerializerInterceptor)
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
   findAll() {
     return this.usersService.findAll();
   }
 
   @Patch('/me')
-  @UseGuards(AuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   async updateMyInfo(
     @Request() req: Request,
@@ -90,7 +88,7 @@ export class UsersController {
 
   @Patch('/superadmin/:id')
   @UseInterceptors(ClassSerializerInterceptor)
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('SUPERADMIN')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.updateUser(id, updateUserDto);
@@ -98,7 +96,7 @@ export class UsersController {
 
   @Delete('/superadmin/:id')
   @UseInterceptors(ClassSerializerInterceptor)
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('SUPERADMIN')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
