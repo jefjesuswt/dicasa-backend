@@ -1,4 +1,6 @@
 import {
+  ArrayMinSize,
+  IsArray,
   IsEmail,
   IsEnum,
   IsOptional,
@@ -20,7 +22,9 @@ export class CreateUserDto {
   @IsPhoneNumber()
   phoneNumber: string;
 
-  @IsEnum(['USER', 'ADMIN'])
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsEnum(['USER', 'ADMIN'], { each: true })
   @IsOptional()
   roles?: string[];
 }

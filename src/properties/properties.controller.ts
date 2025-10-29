@@ -78,11 +78,12 @@ export class PropertiesController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
+  @UseInterceptors(ClassSerializerInterceptor)
   update(
     @Param('id', ParseMongoIdPipe) id: string,
     @Body() updatePropertyDto: UpdatePropertyDto,
   ) {
-    return { message: 'Update endpoint no implementado aún.' };
+    return this.propertiesService.update(id, updatePropertyDto);
   }
 
   @Delete(':id')

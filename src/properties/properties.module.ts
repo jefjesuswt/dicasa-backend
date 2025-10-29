@@ -6,10 +6,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PropertySchema } from './entities/property.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/users/users.module';
+import { LocationModule } from 'src/location/location.module';
 
 @Module({
   imports: [
     AuthModule,
+    LocationModule,
     UsersModule,
     StorageModule,
     MongooseModule.forFeature([{ name: 'Property', schema: PropertySchema }]),

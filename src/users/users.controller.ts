@@ -26,7 +26,7 @@ import { StorageService } from '../storage/storage.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from './entities/user.entity';
 import { UpdateMyInfoDto } from './dto/update-my-info.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongo-id.pipe';
 
 @UseGuards(AuthGuard)
 @Controller('users')
@@ -74,6 +74,14 @@ export class UsersController {
   @Roles('ADMIN', 'SUPERADMIN')
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('/:id')
+  @UseInterceptors(ClassSerializerInterceptor)
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN')
+  findOne(@Param('id', ParseMongoIdPipe) id: string) {
+    return this.usersService.findOneById(id);
   }
 
   @Patch('/me')

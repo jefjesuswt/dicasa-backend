@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,12 +13,14 @@ import { Property } from './entities/property.entity';
 import { User } from '../users/entities/user.entity';
 import { StorageService } from '../storage/storage.service';
 import { plainToInstance } from 'class-transformer';
+import { LocationService } from 'src/location/location.service';
 
 @Injectable()
 export class PropertiesService {
   constructor(
     @InjectModel(Property.name) private readonly propertyModel: Model<Property>,
     private readonly storageService: StorageService,
+    private readonly locationService: LocationService,
   ) {}
 
   async uploadImages(
@@ -40,6 +46,7 @@ export class PropertiesService {
     createPropertyDto: CreatePropertyDto,
     agent: User,
   ): Promise<Property> {
+    this.validateLocation(createPropertyDto.address);
     const newProperty = new this.propertyModel({
       ...createPropertyDto,
       agent: agent._id,
@@ -55,8 +62,21 @@ export class PropertiesService {
     return plainToInstance(Property, savedProperty.toObject());
   }
 
-  update(id: number, updatePropertyDto: UpdatePropertyDto) {
-    return `This action updates a #${id} property`;
+  async update(id: string, updatePropertyDto: UpdatePropertyDto) {
+    if (updatePropertyDto.address) {
+      // Asumimos que si 'address' viene, trae 'city' y 'state'
+      this.validateLocation(updatePropertyDto.address);
+    }
+
+    const updatedProperty = await this.propertyModel
+      .findByIdAndUpdate(id, updatePropertyDto, { new: true })
+      .populate({ path: 'agent', select: '-password' })
+      .exec();
+
+    if (!updatedProperty) {
+      throw new NotFoundException(`Propiedad con ID '${id}' no encontrada.`);
+    }
+    return plainToInstance(Property, updatedProperty.toObject());
   }
 
   async findAll(): Promise<Property[]> {
@@ -89,19 +109,31 @@ export class PropertiesService {
       throw new NotFoundException(`Propiedad con ID '${id}' no encontrada.`);
     }
 
-    // 1. Borrar la propiedad de la DB
     await this.propertyModel.findByIdAndDelete(id);
 
-    // 2. (¡Importante!) Borrar las imágenes de R2/Cloudflare
     if (property.images && property.images.length > 0) {
-      // Creamos una promesa por cada imagen que queremos borrar
       const deletePromises = property.images.map((imageUrl) =>
         this.storageService.deleteFile(imageUrl),
       );
-      // Esperamos a que todas se borren
       await Promise.all(deletePromises);
     }
 
     return { message: `Propiedad con ID '${id}' eliminada exitosamente.` };
+  }
+
+  // LOCATION
+  //
+  private validateLocation(address: { state: string; city: string }): void {
+    const { state, city } = address;
+
+    if (!this.locationService.isValidState(state)) {
+      throw new BadRequestException(`El estado '${state}' no es válido.`);
+    }
+
+    if (!this.locationService.isValidCity(state, city)) {
+      throw new BadRequestException(
+        `La ciudad '${city}' no es válida para el estado '${state}'.`,
+      );
+    }
   }
 }
