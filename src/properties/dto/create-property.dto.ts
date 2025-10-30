@@ -10,6 +10,7 @@ import {
   ValidateNested,
   Min,
   ArrayMinSize,
+  IsMongoId,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PropertyStatus, PropertyType } from '../entities/property.entity';
@@ -56,16 +57,14 @@ export class CreatePropertyDto {
   @IsOptional()
   featured?: boolean;
 
-  /**
-   * Validación del DTO de dirección anidado
-   */
   @ValidateNested()
   @Type(() => CreatePropertyAddressDto)
   address: CreatePropertyAddressDto;
 
-  /**
-   * Validación del DTO de características anidado
-   */
+  @IsMongoId()
+  @IsOptional()
+  agentId: string;
+
   @ValidateNested()
   @Type(() => CreatePropertyFeaturesDto)
   @IsOptional()

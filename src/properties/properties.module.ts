@@ -18,5 +18,6 @@ import { LocationModule } from 'src/location/location.module';
   ],
   controllers: [PropertiesController],
   providers: [PropertiesService],
+  exports: [PropertiesService],
 })
 export class PropertiesModule {}

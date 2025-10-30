@@ -1,0 +1,136 @@
+<html lang='es'>
+    <head>
+        <meta charset='UTF-8' />
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <title>Solicitud Recibida</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #1f2937;
+                margin: 0;
+                padding: 0;
+                background-color: #f3f4f6;
+            }
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .header {
+                background-color: #0369a1;
+                padding: 30px 20px;
+                text-align: center;
+                border-radius: 8px 8px 0 0;
+            }
+            .header h1 {
+                color: white;
+                margin: 0;
+                font-size: 24px;
+                font-weight: 600;
+            }
+            .content {
+                background-color: white;
+                padding: 30px;
+                border-radius: 0 0 8px 8px;
+                box-shadow:
+                    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .button {
+                display: inline-block;
+                background-color: #0284c7;
+                color: white !important;
+                text-decoration: none;
+                padding: 12px 24px;
+                border-radius: 6px;
+                font-weight: 600;
+                margin: 20px 0;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                color: #6b7280;
+                font-size: 14px;
+            }
+            .logo {
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
+                margin-bottom: 15px;
+                display: block;
+            }
+            .info-box {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 15px;
+                padding: 15px 20px;
+                background-color: #f9fafb;
+                border-radius: 6px;
+                margin: 10px 0;
+                color: #111827;
+                border: 1px solid #e5e7eb;
+            }
+            .info-box p {
+                margin: 8px 0;
+            }
+            .section-title {
+                border-bottom: 2px solid #eee;
+                padding-bottom: 5px;
+                margin-top: 20px;
+                font-size: 18px;
+                font-weight: 600;
+            }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+          <div class='header'>
+            <span class='logo'>Dicasa Group</span>
+            <h1>Hemos Recibido tu Solicitud</h1>
+          </div>
+          <div class='content'>
+            <p>¡Hola {{clientName}}!</p>
+            <p>Confirmamos que hemos recibido tu solicitud de información. Uno de
+              nuestros agentes se pondrá en contacto contigo a la brevedad.</p>
+
+            <h3 class='section-title'>Detalles de tu Solicitud</h3>
+
+
+
+            <div class='info-box'>
+              <p><strong>Propiedad:</strong> {{propertyTitle}}</p>
+
+              <img
+                  src="{{propertyImage}}"
+                  alt="Imagen de la propiedad"
+                  style="width: 100%; max-width: 500px; height: auto; border-radius: 6px; margin-top: 10px; margin-bottom: 10px;"
+              />
+              <p><strong>Fecha Solicitada:</strong> {{appointmentDateString}}</p>
+            </div>
+            <p>Para tu referencia, este es el agente asignado a la propiedad:</p>
+
+            <div class='info-box'>
+              <p><strong>Asesor:</strong> {{agentName}}</p>
+              <p><strong>Email:</strong> {{agentEmail}}</p>
+              <p><strong>Teléfono:</strong> {{agentPhone}}</p>
+            </div>
+
+            <div style='text-align: center;'>
+              <a href='{{propertyUrl}}' class='button'>Ver Propiedad</a>
+            </div>
+
+            <p>¡Gracias por tu interés en Dicasa Group!</p>
+
+            <p>Atentamente,<br />El equipo de Dicasa</p>
+
+            <div class='footer'>
+              <p>Si el botón no funciona, copia y pega este enlace en tu
+                navegador:</p>
+              <p style='word-break: break-all;'>{{propertyUrl}}</p>
+              <p>© 2025 Dicasa. Todos los derechos reservados.</p>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+</html>

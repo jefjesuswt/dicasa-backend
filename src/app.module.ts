@@ -9,6 +9,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { StorageModule } from './storage/storage.module';
 import { PropertiesModule } from './properties/properties.module';
 import { LocationModule } from './location/location.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { LocationModule } from './location/location.module';
     StorageModule,
     PropertiesModule,
     LocationModule,
+    AppointmentsModule,
   ],
   controllers: [],
   providers: [MailService],

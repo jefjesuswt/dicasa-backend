@@ -6,7 +6,7 @@ import {
   Logger,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { UsersService } from '../../users/users.service';
 import { ConfigService } from '@nestjs/config';
@@ -55,6 +55,13 @@ export class AuthGuard implements CanActivate {
         secret,
       });
     } catch (error) {
+      if (
+        error instanceof TokenExpiredError ||
+        error instanceof JsonWebTokenError
+      ) {
+        throw new UnauthorizedException(`Error de token: ${error.message}`);
+      }
+
       this.logger.error(
         `AuthGuard: Token verification failed - ${error.message}`,
         error.stack,

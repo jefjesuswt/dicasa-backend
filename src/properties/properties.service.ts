@@ -44,12 +44,12 @@ export class PropertiesService {
 
   async create(
     createPropertyDto: CreatePropertyDto,
-    agent: User,
+    creatorAgent: User,
   ): Promise<Property> {
     this.validateLocation(createPropertyDto.address);
     const newProperty = new this.propertyModel({
       ...createPropertyDto,
-      agent: agent._id,
+      agent: createPropertyDto.agentId || creatorAgent._id,
     });
 
     const savedProperty = await newProperty.save();
@@ -64,12 +64,18 @@ export class PropertiesService {
 
   async update(id: string, updatePropertyDto: UpdatePropertyDto) {
     if (updatePropertyDto.address) {
-      // Asumimos que si 'address' viene, trae 'city' y 'state'
       this.validateLocation(updatePropertyDto.address);
     }
 
     const updatedProperty = await this.propertyModel
-      .findByIdAndUpdate(id, updatePropertyDto, { new: true })
+      .findByIdAndUpdate(
+        id,
+        {
+          ...updatePropertyDto,
+          agent: updatePropertyDto.agentId,
+        },
+        { new: true },
+      )
       .populate({ path: 'agent', select: '-password' })
       .exec();
 
