@@ -36,8 +36,6 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/dicasa-backend:latest
             ghcr.io/${{ github.repository_owner }}/dicasa-backend:${{ github.sha }}
 
-      # 4. ¡NUEVO! Avisar a Dokploy para que se actualice
-      # (Este es el paso de Despliegue Continuo - CD)
       - name: Trigger Dokploy Redeploy
-        if: success() # Solo corre si el build fue exitoso
+        if: success()
         run: curl -X POST ${{ secrets.DOKPLOY_HOOK }}
