@@ -13,6 +13,7 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
   ClassSerializerInterceptor,
+  Query,
 } from '@nestjs/common';
 import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
@@ -25,6 +26,8 @@ import { User } from '../users/entities/user.entity';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Public } from '../auth/decorators/public.decorator';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id.pipe';
+import { QueryPropertyDto } from './dto/query-property.dto';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @UseGuards(AuthGuard)
 @Controller('properties')
@@ -61,11 +64,23 @@ export class PropertiesController {
     return this.propertiesService.uploadImages(files, agent);
   }
 
+  @Get('agent/my-properties')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN')
+  @UseInterceptors(ClassSerializerInterceptor)
+  findMyProperties(
+    @Query() queryPropertyDto: QueryPropertyDto,
+    @ActiveUser() user: User,
+  ) {
+    return this.propertiesService.findAll(queryPropertyDto, user._id);
+  }
+
   @Public()
   @Get()
+  @UseInterceptors(CacheInterceptor)
   @UseInterceptors(ClassSerializerInterceptor)
-  findAll() {
-    return this.propertiesService.findAll();
+  findAll(@Query() queryPropertyDto: QueryPropertyDto) {
+    return this.propertiesService.findAll(queryPropertyDto);
   }
 
   @Public()

@@ -1,12 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { PropertiesService } from './properties.service';
 import { PropertiesController } from './properties.controller';
-import { StorageModule } from 'src/storage/storage.module';
+import { StorageModule } from '../storage/storage.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PropertySchema } from './entities/property.entity';
-import { AuthModule } from 'src/auth/auth.module';
-import { UsersModule } from 'src/users/users.module';
-import { LocationModule } from 'src/location/location.module';
+import { AuthModule } from '../auth/auth.module';
+import { UsersModule } from '../users/users.module';
+import { LocationModule } from '../location/location.module';
 
 @Module({
   imports: [

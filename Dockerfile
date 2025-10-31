@@ -2,7 +2,7 @@
 # ETAPA 1: Compilación (Builder)
 # ---------------------------------
 # Usamos la imagen oficial de Bun
-FROM oven/bun:latest AS builder
+FROM oven/bun:1.1 AS builder
 
 # Establecemos el directorio de trabajo
 WORKDIR /usr/src/app
@@ -23,7 +23,7 @@ RUN bun run build
 # ETAPA 2: Producción (Final)
 # ---------------------------------
 # Empezamos desde una nueva imagen base limpia
-FROM oven/bun:latest AS production
+FROM oven/bun:1.1 AS production
 
 WORKDIR /usr/src/app
 

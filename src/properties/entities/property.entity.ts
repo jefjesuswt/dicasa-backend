@@ -52,16 +52,14 @@ export class PropertyAddress {
   country: string;
 }
 
-// --- Entidad Principal de Propiedad ---
-
 @Schema({
-  timestamps: true, // Crea createdAt y updatedAt automáticamente
+  timestamps: true,
 })
 export class Property {
   @Transform(({ value }) => value.toString())
   _id: string;
 
-  @Prop({ required: true, trim: true, index: true }) // 'index: true' para búsquedas rápidas
+  @Prop({ required: true, trim: true, index: true })
   title: string;
 
   @Prop({ required: false, trim: true })
@@ -112,6 +110,13 @@ export class Property {
 
 export const PropertySchema = SchemaFactory.createForClass(Property);
 
-PropertySchema.index({ price: 1, status: 1 }); // Para filtrar por rango de precio y estado
-PropertySchema.index({ 'address.city': 1 }); // Para buscar por ciudad
-PropertySchema.index({ 'address.state': 1 }); // Para buscar por estado
+PropertySchema.index({
+  title: 'text',
+  description: 'text',
+  'address.city': 'text',
+  'address.state': 'text',
+});
+
+PropertySchema.index({ price: 1, status: 1 });
+PropertySchema.index({ 'address.city': 1 });
+PropertySchema.index({ 'address.state': 1 });

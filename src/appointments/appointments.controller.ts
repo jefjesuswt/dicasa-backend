@@ -13,12 +13,14 @@ import {
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongo-id.pipe';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id.pipe';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ReassignAgentDto } from './dto/reassign-agent.dto';
+import { ActiveUser } from '../auth/decorators/active-user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @Controller('appointments')
 @UseGuards(AuthGuard)
@@ -40,6 +42,12 @@ export class AppointmentsController {
     return this.appointmentsService.findAll();
   }
 
+  @Get('me')
+  @UseInterceptors(ClassSerializerInterceptor)
+  findMyAppointments(@ActiveUser() user: User) {
+    return this.appointmentsService.findForUser(user);
+  }
+
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
@@ -49,6 +57,8 @@ export class AppointmentsController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN')
   update(
     @Param('id', ParseMongoIdPipe) id: string,
     @Body() updateAppointmentDto: UpdateAppointmentDto,

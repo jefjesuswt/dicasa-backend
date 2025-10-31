@@ -26,7 +26,7 @@ import { StorageService } from '../storage/storage.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from './entities/user.entity';
 import { UpdateMyInfoDto } from './dto/update-my-info.dto';
-import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongo-id.pipe';
+import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id.pipe';
 
 @UseGuards(AuthGuard)
 @Controller('users')

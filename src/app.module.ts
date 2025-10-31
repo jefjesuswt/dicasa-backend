@@ -10,10 +10,11 @@ import { StorageModule } from './storage/storage.module';
 import { PropertiesModule } from './properties/properties.module';
 import { LocationModule } from './location/location.module';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import KeyvRedis, { Keyv } from '@keyv/redis';
 
 @Module({
   imports: [
-    AuthModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
     MongooseModule.forRootAsync({
@@ -23,6 +24,45 @@ import { AppointmentsModule } from './appointments/appointments.module';
       }),
       inject: [ConfigService],
     }),
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        const redisStore = new KeyvRedis({
+          url: configService.get<string>('REDIS_URL'),
+
+          socket: {
+            connectTimeout: 2000,
+            reconnectStrategy: false,
+          },
+          disableOfflineQueue: true,
+        });
+
+        if ((redisStore as any).client) {
+          (redisStore as any).client.on('error', (err: any) => {
+            console.warn(
+              `[Raw Redis Client Error] Error (ignorado): ${err.message}`,
+            );
+          });
+        }
+        redisStore.on('error', (err) => {
+          console.warn(
+            `[KeyvRedis Adapter Error] Error (ignorado): ${err.message}`,
+          );
+        });
+        const keyvInstance = new Keyv({ store: redisStore });
+        keyvInstance.on('error', (err) => {
+          console.warn(`[Keyv Main Error] Error (ignorado): ${err.message}`);
+        });
+
+        return {
+          stores: [keyvInstance],
+          ttl: 600000, // 10 minutos
+        };
+      },
+      isGlobal: true,
+    }),
+    AuthModule,
     UsersModule,
     MailModule,
     StorageModule,

@@ -11,12 +11,12 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment } from './entities/appointment.entity';
 import { Model } from 'mongoose';
-import { Property } from 'src/properties/entities/property.entity';
-import { MailService } from 'src/mail/mail.service';
-import { User } from 'src/users/entities/user.entity';
+import { Property } from '../properties/entities/property.entity';
+import { MailService } from '../mail/mail.service';
+import { User } from '../users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -218,6 +218,30 @@ export class AppointmentsService {
     }
 
     return plainToInstance(Appointment, appointment.toObject());
+  }
+
+  async findForUser(user: User): Promise<Appointment[]> {
+    this.logger.log(
+      `[findForUser] Buscando citas para el usuario: ${user.email}`,
+    );
+
+    const appointments = await this.appointmentModel
+      .find({
+        $or: [{ email: user.email }, { phoneNumber: user.phoneNumber }],
+      })
+      .populate('property', 'title price images status')
+      .populate('agent', 'name email phoneNumber')
+      .sort({ appointmentDate: -1 })
+      .exec();
+
+    if (!appointments) {
+      return [];
+    }
+
+    return plainToInstance(
+      Appointment,
+      appointments.map((a) => a.toObject()),
+    );
   }
 
   async update(
