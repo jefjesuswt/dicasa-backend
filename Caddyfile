@@ -1,0 +1,4 @@
+dicasa-backend.54.147.160.108.nip.io {
+    tls jefjesuwt@gmail.com
+    reverse_proxy app:3000
+}

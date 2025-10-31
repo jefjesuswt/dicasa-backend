@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/jefjesuswt/dicasa-backend:latest
+    container_name: dicasa-app
+    restart: always
+    env_file:
+      - ./.env
+    expose:
+      - '3000'
+    networks:
+      - dicasa-net
+
+  caddy:
+    image: caddy:latest
+    container_name: dicasa-caddy
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    networks:
+      - dicasa-net
+
+networks:
+  dicasa-net:
+
+volumes:
+  caddy_data:
