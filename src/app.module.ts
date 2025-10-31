@@ -57,7 +57,7 @@ import KeyvRedis, { Keyv } from '@keyv/redis';
 
         return {
           stores: [keyvInstance],
-          ttl: 600000, // 10 minutos
+          ttl: 600000,
         };
       },
       isGlobal: true,
