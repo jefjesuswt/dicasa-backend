@@ -1,4 +1,11 @@
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import { PropertyStatus, PropertyType } from '../entities/property.entity';
 import { Type } from 'class-transformer';
 
@@ -6,6 +13,11 @@ export class QueryPropertyDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean) // Asegura la transformación de "true" a true
+  featured?: boolean;
 
   @IsOptional()
   @IsNumber()

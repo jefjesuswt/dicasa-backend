@@ -109,6 +109,7 @@ export class PropertiesService {
       maxPrice,
       bedrooms,
       search,
+      featured,
     } = queryDto;
 
     const filterQuery: any = {};
@@ -149,6 +150,10 @@ export class PropertiesService {
       if (maxPrice !== undefined) {
         filterQuery.price.$lte = maxPrice;
       }
+    }
+
+    if (featured !== undefined) {
+      filterQuery.featured = featured;
     }
 
     if (search) {
