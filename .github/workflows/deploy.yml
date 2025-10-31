@@ -1,35 +1,43 @@
-name: Deploy
-# ensure that only a single job or workflow using the same concurrency group will run at a time
-# See https://docs.github.com/en/actions/using-jobs/using-concurrency
-concurrency: deploy
+name: CI - Build and Push Docker Image
+
 on:
-  workflow_dispatch:
   push:
     branches:
-      - main
+      - main # Se ejecuta solo cuando haces 'push' a la rama 'main'
+
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  Deploy:
-    environment: production
+  build-and-push:
     runs-on: ubuntu-latest
-    env:
-      RUNNING_WITHIN_CI_PIPELINE: 1
-      GIT_USERNAME_OR_ORG: jefjesuswt
-      GIT_REPO_NAME: dicasa-backend
-      APP_NAME: dicasa-backend
-      SSH_CONFIG_FILE: /dev/null
-      AMBER_SECRET: ${{ secrets.AMBER_SECRET }}
-      DOKKU_SSH_PRIVATE_KEY: ${{ secrets.DOKKU_SSH_PRIVATE_KEY}}
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server."
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - name: List files in the repository
-        run: |
-          ls -la ${{ github.workspace }}
-      - name: Deploy
-        run: |
-          set -x
-          ./.container-hosting/deploy.sh
+      # 1. Clonar tu repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Iniciar sesión en GitHub Container Registry (GHCR)
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3. Construir y subir la imagen de Docker
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/dicasa-backend:latest
+            ghcr.io/${{ github.repository_owner }}/dicasa-backend:${{ github.sha }}
+
+      # 4. ¡NUEVO! Avisar a Dokploy para que se actualice
+      # (Este es el paso de Despliegue Continuo - CD)
+      - name: Trigger Dokploy Redeploy
+        if: success() # Solo corre si el build fue exitoso
+        run: curl -X POST ${{ secrets.DOKPLOY_HOOK }}
