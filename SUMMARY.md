@@ -12,6 +12,7 @@ This document provides a technical summary of the Dicasa backend, a NestJS appli
 - **Containerization:** Docker
 - **File Storage:** Cloudflare R2
 - **Emailing:** Nodemailer with Handlebars templates.
+- **Caching:** Redis / Valkey for response caching.
 
 ---
 

@@ -4,12 +4,14 @@
 ![Framework](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
 ![Database](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Storage](https://img.shields.io/badge/Cloudflare_R2-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![Cache](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![License](https://img.shields.io/github/license/jefjesuswt/dicasa-backend?style=for-the-badge)
 
 Backend for Dicasa, a real estate management system. Built with [NestJS](https://nestjs.com/), a progressive Node.js framework for building efficient and scalable server-side applications.
 
 ## ✨ Features
 
+- ⚡ Response Caching with Redis/Valkey for improved performance
 - 🔐 Role-based access control (RBAC) for protected routes
 - 👤 User authentication (registration, login, JWT) and profile management
 - 🏠 Full property management (CRUD operations)
@@ -48,6 +50,7 @@ Backend for Dicasa, a real estate management system. Built with [NestJS](https:/
    ```
    # .env
    DATABASE_URI=your-mongodb-uri
+   REDIS_URL=redis://localhost:6379
    R2_PUBLIC_URL=your-r2-public-url
    CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
    CLOUDFLARE_ACCESS_KEY_ID=your-cloudflare-access-key-id
@@ -105,6 +108,7 @@ src/
 - [NestJS](https://nestjs.com/) - Web application framework
 - [MongoDB](https://www.mongodb.com/) - NoSQL Database
 - [Mongoose](https://mongoosejs.com/) - MongoDB object modeling tool
+- [Redis](https://redis.io/) / [Valkey](https://valkey.io/) - In-memory data store for caching
 - [TypeScript](https://www.typescriptlang.org/) - Typed language that compiles to JavaScript
 - [JWT](https://jwt.io/) - For authentication
 - [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - S3-compatible object storage
