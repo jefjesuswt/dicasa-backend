@@ -1,134 +1,122 @@
-# Dicasa Backend
+# Dicasa - Real Estate Backend
 
-Backend de Dicasa, un sistema para la gestión de propiedades inmobiliarias. Construido con [NestJS](https://nestjs.com/), un framework progresivo de Node.js para construir aplicaciones eficientes y escalables del lado del servidor.
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-blue?style=for-the-badge&logo=githubactions)
+![Framework](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
+![Database](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Storage](https://img.shields.io/badge/Cloudflare_R2-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![License](https://img.shields.io/github/license/jefjesuswt/dicasa-backend?style=for-the-badge)
 
-## Descripción
+Backend for Dicasa, a real estate management system. Built with [NestJS](https://nestjs.com/), a progressive Node.js framework for building efficient and scalable server-side applications.
 
-Este proyecto proporciona la API REST para la aplicación Dicasa. Gestiona usuarios, autenticación, propiedades y almacenamiento de archivos.
+## ✨ Features
 
-## Características
+- 🔐 Role-based access control (RBAC) for protected routes
+- 👤 User authentication (registration, login, JWT) and profile management
+- 🏠 Full property management (CRUD operations)
+- 🖼️ Image uploads to Cloudflare R2
+- 📅 Appointment scheduling and management
+- 👨‍💼 Agent and user management
+- 🔍 Advanced property search and filtering
+- ✉️ Transactional emails for confirmations and notifications
+- 🗺️ Location API for states and cities of Venezuela
+- 📝 Contact form handling
 
-- **Autenticación de usuarios:** Registro, inicio de sesión y gestión de sesiones con JWT.
-- **Gestión de usuarios:** Creación, actualización y eliminación de usuarios.
-- **Gestión de propiedades:** Creación, actualización y eliminación de propiedades.
-- **Almacenamiento de archivos:** Sube y gestiona archivos en Cloudflare R2.
-- **Envío de correos electrónicos:** Envía correos electrónicos para confirmación de cuenta y restablecimiento de contraseña.
+## 🚀 Getting Started
 
-## Prerrequisitos
+### Prerequisites
 
-- [Bun](https://bun.sh/)
+- Node.js (v18 or higher)
+- Bun (v1 or higher)
 
-## Instalación
+### Installation
 
-1. Clona el repositorio:
-
+1. Clone the repository:
    ```bash
-   git clone https://github.com/tu-usuario/dicasa-backend.git
+   git clone https://github.com/jefjesuswt/dicasa-backend.git
    cd dicasa-backend
    ```
 
-2. Instala las dependencias con Bun:
-
+2. Install the dependencies:
    ```bash
+   # Using Bun (recommended)
    bun install
    ```
 
-## Variables de Entorno
+3. Set up environment variables:
+   Create a `.env` file in the root of the project and add the variables listed in `.env.template`.
 
-Crea un archivo `.env` en la raíz del proyecto y añade las siguientes variables de entorno. Puedes usar el archivo `.env.template` como guía.
-
-```bash
-DATABASE_URI=
-R2_PUBLIC_URL=
-CLOUDFLARE_ACCOUNT_ID=
-CLOUDFLARE_ACCESS_KEY_ID=
-CLOUDFLARE_SECRET_ACCESS_KEY=
-R2_BUCKET_NAME=
-JWT_ACCESS_SECRET=
-JWT_ACCESS_EXPIRATION=
-JWT_CONFIRM_SECRET=
-JWT_CONFIRM_EXPIRATION=
-MAIL_HOST=
-MAIL_USER=
-MAIL_PASS=
-MAIL_PORT=
-API_URL=
-FRONTEND_URL=
-```
-
-## Ejecutando la Aplicación
-
-### Desarrollo
-
-```bash
-bun run start
-```
-
-### Modo Observador (Watch Mode)
-
-```bash
-bun run start:dev
-```
-
-### Producción
-
-```bash
-bun run start:prod
-```
-
-## Ejecutando con Docker
-
-1. Construye la imagen de Docker:
-
-   ```bash
-   docker build -t dicasa-backend .
+   ```
+   # .env
+   DATABASE_URI=your-mongodb-uri
+   R2_PUBLIC_URL=your-r2-public-url
+   CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
+   CLOUDFLARE_ACCESS_KEY_ID=your-cloudflare-access-key-id
+   CLOUDFLARE_SECRET_ACCESS_KEY=your-cloudflare-secret-key
+   R2_BUCKET_NAME=your-r2-bucket-name
+   JWT_ACCESS_SECRET=your-jwt-access-secret
+   JWT_ACCESS_EXPIRATION=1d
+   JWT_CONFIRM_SECRET=your-jwt-confirm-secret
+   JWT_CONFIRM_EXPIRATION=1d
+   MAIL_HOST=your-mail-host
+   MAIL_USER=your-mail-user
+   MAIL_PASS=your-mail-pass
+   MAIL_PORT=587
+   API_URL=http://localhost:3000
+   FRONTEND_URL=http://localhost:4200
    ```
 
-2. Ejecuta el contenedor:
-
+4. Start the development server:
    ```bash
-   docker run -p 3000:3000 --env-file .env dicasa-backend
+   # Using Bun
+   bun run start:dev
    ```
 
-## Pruebas
+The application will be running at `http://localhost:3000`.
 
-### Pruebas Unitarias
+## 🛠️ Useful Commands
 
-```bash
-bun run test
-```
+- **Start development server (with watch mode)**: `bun run start:dev`
+- **Start production server**: `bun run start:prod`
+- **Build for production**: `bun run build`
+- **Run unit tests**: `bun run test`
+- **Run e2e tests**: `bun run test:e2e`
+- **Run linting**: `bun run lint`
 
-### Pruebas End-to-End (e2e)
-
-```bash
-bun run test:e2e
-```
-
-### Cobertura de Pruebas
-
-```bash
-bun run test:cov
-```
-
-## Estructura del Proyecto
-
-El proyecto sigue la estructura estándar de una aplicación NestJS:
+## 🏗️ Project Structure
 
 ```
-src
-├── app.module.ts
-├── main.ts
-├── auth
-├── mail
-├── properties
-├── storage
-└── users
+src/
+├── app.module.ts         # Root module
+├── main.ts               # Application entry point
+├── auth/                 # Authentication and authorization
+├── users/                # User management
+├── properties/           # Property management
+├── appointments/         # Appointment scheduling
+├── contact/              # Contact form handling
+├── location/             # Location data API
+├── mail/                 # Email sending service
+├── storage/              # File storage service (Cloudflare R2)
+├── common/               # Common pipes, guards, etc.
+└── data/                 # Static data (e.g., venezuela.json)
 ```
 
-- `src/main.ts`: El punto de entrada de la aplicación.
-- `src/app.module.ts`: El módulo raíz de la aplicación.
-- `src/auth`: Módulo de autenticación.
-- `src/mail`: Módulo para el envío de correos.
-- `src/properties`: Módulo para la gestión de propiedades.
-- `src/storage`: Módulo para el almacenamiento de archivos.
-- `src/users`: Módulo para la gestión de usuarios.
+## 🎨 Technologies Used
+
+- [NestJS](https://nestjs.com/) - Web application framework
+- [MongoDB](https://www.mongodb.com/) - NoSQL Database
+- [Mongoose](https://mongoosejs.com/) - MongoDB object modeling tool
+- [TypeScript](https://www.typescriptlang.org/) - Typed language that compiles to JavaScript
+- [JWT](https://jwt.io/) - For authentication
+- [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - S3-compatible object storage
+- [Nodemailer](https://nodemailer.com/) - For sending emails
+- [Handlebars](https://handlebarsjs.com/) - For email templates
+- [Bun](https://bun.sh/) - JavaScript runtime and toolkit
+- [Docker](https://www.docker.com/) - For containerization
+
+## 📄 License
+
+This project is under the MIT License - see the `LICENSE` file for more details.
+
+---
+
+Developed with ❤️ by [Jeffrey Jesús Jimenez Malave](https://github.com/jefjesuswt)
