@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { User } from '../../users/entities/user.entity';
+import { User, UserRole } from '../../users/entities/user.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -35,7 +35,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // 5. Check if the user has at least one of the required roles
-    const hasRequiredRole = requiredRoles.some((role) =>
+    const hasRequiredRole = requiredRoles.some((role: UserRole) =>
       user.roles.includes(role),
     );
 

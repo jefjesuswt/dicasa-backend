@@ -15,6 +15,9 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  HttpCode,
+  HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,10 +30,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from './entities/user.entity';
 import { UpdateMyInfoDto } from './dto/update-my-info.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id.pipe';
+import { ChangePasswordDto } from '../auth/dto/changePassword.dto';
+import { QueryUserDto } from './dto/query-user.dto';
 
 @UseGuards(AuthGuard)
 @Controller('users')
 export class UsersController {
+  authService: any;
   constructor(
     private readonly storageService: StorageService,
     private readonly usersService: UsersService,
@@ -72,8 +78,8 @@ export class UsersController {
   @UseInterceptors(ClassSerializerInterceptor)
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Query() queryDto: QueryUserDto) {
+    return this.usersService.findAll(queryDto);
   }
 
   @Get('/:id')
@@ -108,5 +114,15 @@ export class UsersController {
   @Roles('SUPERADMIN')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @Request() req: Request,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    const user = req['user'];
+    return this.usersService.changePassword(user.email, changePasswordDto);
   }
 }

@@ -257,22 +257,4 @@ export class AuthService {
     await this.userService.updatePassword(user._id, newPasswordHash);
     return { message: 'La contraseña se ha restablecido correctamente.' };
   }
-
-  async changePassword(email: string, changePasswordDto: ChangePasswordDto) {
-    const { password, newPassword } = changePasswordDto;
-    const user = await this.userService.findOneByEmail(email, true);
-
-    if (!user) {
-      throw new UnauthorizedException('Usuario no encontrado.');
-    }
-
-    const isPasswordCorrect = await argon2.verify(user.password, password);
-    if (!isPasswordCorrect) {
-      throw new UnauthorizedException('Contraseña incorrecta.');
-    }
-
-    const newPasswordHash = await argon2.hash(newPassword);
-    await this.userService.updatePassword(user._id, newPasswordHash);
-    return { message: 'La contraseña se ha restablecido correctamente.' };
-  }
 }

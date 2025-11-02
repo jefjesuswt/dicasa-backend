@@ -12,6 +12,7 @@ import { LocationModule } from './location/location.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis, { Keyv } from '@keyv/redis';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import KeyvRedis, { Keyv } from '@keyv/redis';
     PropertiesModule,
     LocationModule,
     AppointmentsModule,
+    ContactModule,
   ],
   controllers: [],
   providers: [MailService],

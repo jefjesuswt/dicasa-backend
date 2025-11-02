@@ -13,10 +13,12 @@ import { Appointment } from './entities/appointment.entity';
 import { Model } from 'mongoose';
 import { Property } from '../properties/entities/property.entity';
 import { MailService } from '../mail/mail.service';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { UsersService } from '../users/users.service';
+import { QueryAppointmentDto } from './dto/query-appointment-dto';
+import { PaginatedAppointmentResponse } from './interfaces/paginated-appointment.response.interface';
 
 @Injectable()
 export class AppointmentsService {
@@ -192,18 +194,50 @@ export class AppointmentsService {
     return plainToInstance(Appointment, populatedDoc.toObject());
   }
 
-  async findAll(): Promise<Appointment[]> {
-    const appointments = await this.appointmentModel
-      .find()
-      .populate('property', 'title price')
-      .populate('agent', 'name email phoneNumber')
-      .sort({ createdAt: -1 })
-      .exec();
+  async findAll(
+    queryDto: QueryAppointmentDto,
+  ): Promise<PaginatedAppointmentResponse> {
+    const { page = 1, limit = 10, search, status } = queryDto;
 
-    return plainToInstance(
+    const filterQuery: any = {};
+    const skip = (page - 1) * limit;
+
+    if (search) {
+      const searchRegex = { $regex: new RegExp(search, 'i') };
+      filterQuery.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex },
+      ];
+    }
+
+    if (status) {
+      filterQuery.status = status;
+    }
+
+    const [appointments, total] = await Promise.all([
+      this.appointmentModel
+        .find(filterQuery)
+        .populate('property', 'title')
+        .populate('agent', 'name email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.appointmentModel.countDocuments(filterQuery),
+    ]);
+
+    const serializedData = plainToInstance(
       Appointment,
       appointments.map((a) => a.toObject()),
     );
+
+    return {
+      data: serializedData,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: string): Promise<Appointment> {
@@ -327,8 +361,8 @@ export class AppointmentsService {
 
     // 2b. Validar que el usuario sea un agente (ADMIN o SUPERADMIN)
     if (
-      !newAgent.roles.includes('ADMIN') &&
-      !newAgent.roles.includes('SUPERADMIN')
+      !newAgent.roles.includes(UserRole.ADMIN) &&
+      !newAgent.roles.includes(UserRole.SUPERADMIN)
     ) {
       throw new BadRequestException(
         `El usuario con ID '${newAgentId}' no es un agente válido.`,

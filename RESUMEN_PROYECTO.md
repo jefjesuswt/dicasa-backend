@@ -109,7 +109,8 @@ Gestiona todo lo relacionado con las propiedades inmobiliarias.
 - **Métodos:**
   - `POST /`: (Superadmin/Admin) Crea una nueva propiedad.
   - `POST /upload`: (Superadmin/Admin) Sube imágenes para una propiedad.
-  - `GET /`: (Público) Obtiene una lista de todas las propiedades.
+  - `GET /`: (Público) Obtiene una lista de todas las propiedades con filtros y paginación.
+  - `GET /agent/my-properties`: (Admin/Superadmin) Obtiene las propiedades del agente autenticado.
   - `GET /:id`: (Público) Obtiene los detalles de una propiedad por su ID.
   - `PATCH /:id`: (Superadmin/Admin) Actualiza una propiedad.
   - `DELETE /:id`: (Superadmin/Admin) Elimina una propiedad y sus imágenes asociadas.
@@ -119,10 +120,19 @@ Gestiona todo lo relacionado con las propiedades inmobiliarias.
 - **Lógica:**
   - `create()`: Guarda una nueva propiedad en la base de datos, asociándola a un agente.
   - `uploadImages()`: Sube múltiples archivos a Cloudflare R2 y devuelve las URLs.
-  - `findAll()` / `findOne()`: Busca propiedades en la base de datos.
+  - `findAll()`: Devuelve una lista paginada y filtrada de propiedades. Admite filtros por:
+    - `search`: Búsqueda de texto completo.
+    - `featured`: Propiedades destacadas.
+    - `state` y `city`: Ubicación.
+    - `type`: Tipo de propiedad (casa, apartamento, etc.).
+    - `status`: Estado de la propiedad (en venta, en alquiler).
+    - `minPrice` y `maxPrice`: Rango de precios.
+    - `bedrooms`: Número de habitaciones.
+  - `findOne()`: Busca una propiedad por su ID.
   - `update()`: Actualiza los datos de una propiedad.
   - `remove()`: Elimina la propiedad y llama a `storageService` para borrar las imágenes.
   - `validateLocation()`: Valida que el estado y la ciudad de la dirección existan.
+  - `invalidatePropertiesCache()`: Invalida el caché de Redis/Valkey cuando se crea, actualiza o elimina una propiedad.
 
 ---
 
@@ -136,6 +146,7 @@ Gestiona las citas y solicitudes de información de los clientes.
 - **Métodos:**
   - `POST /`: (Público) Crea una nueva solicitud de cita.
   - `GET /`: (Superadmin/Admin) Obtiene todas las citas.
+  - `GET /me`: (Autenticado) Obtiene las citas del usuario autenticado.
   - `GET /:id`: (Superadmin/Admin) Obtiene una cita por ID.
   - `PATCH /:id`: Actualiza el estado o fecha de una cita.
   - `PATCH /:id/reassign-agent`: (Superadmin) Reasigna una cita a un nuevo agente.
@@ -149,7 +160,9 @@ Gestiona las citas y solicitudes de información de los clientes.
     - Verifica que el agente no tenga otra cita en un rango de +/- 1 hora.
     - Guarda la cita en la base de datos.
     - Envía un correo de notificación al agente y uno de confirmación al cliente.
-  - `findAll()` / `findOne()`: Busca citas en la base de datos.
+  - `findAll()`: Devuelve todas las citas.
+  - `findOne()`: Busca una cita por su ID.
+  - `findForUser()`: Busca las citas de un usuario por su email o número de teléfono.
   - `update()`: Actualiza una cita, validando conflictos de horario si la fecha cambia.
   - `reassignAgent()`: Cambia el agente de una cita, validando que el nuevo agente no tenga conflictos de horario.
   - `remove()`: Elimina una cita.

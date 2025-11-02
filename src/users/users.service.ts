@@ -19,6 +19,9 @@ import { plainToInstance } from 'class-transformer';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { StorageService } from '../storage/storage.service';
 import { UpdateMyInfoDto } from './dto/update-my-info.dto';
+import { ChangePasswordDto } from '../auth/dto/changePassword.dto';
+import { QueryUserDto } from './dto/query-user.dto';
+import { PaginatedUserResponse } from './interfaces/paginated-user-response.interface';
 
 @Injectable()
 export class UsersService {
@@ -72,9 +75,45 @@ export class UsersService {
     }
   }
 
-  async findAll(): Promise<User[]> {
-    const users = await this.userModel.find();
-    return users.map((user) => plainToInstance(User, user.toObject()));
+  async findAll(queryDto: QueryUserDto): Promise<PaginatedUserResponse> {
+    const { page = 1, limit = 10, search, role } = queryDto;
+
+    const filterQuery: any = {};
+
+    if (search) {
+      const searchRegex = { $regex: new RegExp(search, 'i') };
+      filterQuery.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex },
+      ];
+    }
+
+    if (role) {
+      filterQuery.roles = role;
+    }
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      this.userModel
+        .find(filterQuery)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.userModel.countDocuments(filterQuery),
+    ]);
+
+    const serializedData = users.map((user) =>
+      plainToInstance(User, user.toObject()),
+    );
+
+    return {
+      data: serializedData,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOneByEmail(email: string, selectPassword = false) {
@@ -236,7 +275,6 @@ export class UsersService {
   async handleUnverifiedUserCleanup() {
     this.logger.log('Running unverified user cleanup task...');
 
-    // 1. Calcula la fecha límite (ej. usuarios no verificados de hace más de 7 días)
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - 7); // Resta 7 días
 
@@ -267,26 +305,21 @@ export class UsersService {
       throw new NotFoundException(`User with ID '${userId}' not found.`);
     }
 
-    // 1. (Opcional) Borrar la imagen antigua si existe
     const oldImageUrl = user.profileImageUrl;
     if (oldImageUrl) {
       await this.storageService.deleteFile(oldImageUrl);
     }
 
-    // 2. Definir la lógica de negocio (path y nombre)
-    // (Usando la recomendación de nombre de archivo seguro)
     const extension = file.originalname.split('.').pop();
     const filename = `${uuidv4()}.${extension}`;
     const key = `profile-pictures/${userId}/${filename}`; // Key completa
 
-    // 3. Subir el nuevo archivo usando el servicio genérico
     const imageUrl = await this.storageService.uploadFile(file, key);
 
-    // 4. Actualizar el documento del usuario
     const updatedUser = await this.userModel.findByIdAndUpdate(
       userId,
       { profileImageUrl: imageUrl },
-      { new: true }, // Return the updated document
+      { new: true },
     );
 
     if (!updatedUser) {
@@ -296,5 +329,23 @@ export class UsersService {
     }
 
     return plainToInstance(User, updatedUser.toObject());
+  }
+
+  async changePassword(email: string, changePasswordDto: ChangePasswordDto) {
+    const { password, newPassword } = changePasswordDto;
+    const user = await this.findOneByEmail(email, true);
+
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado.');
+    }
+
+    const isPasswordCorrect = await argon2.verify(user.password, password);
+    if (!isPasswordCorrect) {
+      throw new UnauthorizedException('Contraseña incorrecta.');
+    }
+
+    const newPasswordHash = await argon2.hash(newPassword);
+    await this.updatePassword(user._id, newPasswordHash);
+    return { message: 'La contraseña se ha restablecido correctamente.' };
   }
 }

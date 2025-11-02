@@ -99,14 +99,4 @@ export class AuthController {
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
   }
-
-  @Post('change-password')
-  @HttpCode(HttpStatus.OK)
-  async changePassword(
-    @Request() req: Request,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ) {
-    const user = req['user'];
-    return this.authService.changePassword(user.email, changePasswordDto);
-  }
 }

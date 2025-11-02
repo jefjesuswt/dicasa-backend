@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -21,6 +22,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { ReassignAgentDto } from './dto/reassign-agent.dto';
 import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { QueryAppointmentDto } from './dto/query-appointment-dto';
 
 @Controller('appointments')
 @UseGuards(AuthGuard)
@@ -38,8 +40,8 @@ export class AppointmentsController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
   @UseInterceptors(ClassSerializerInterceptor)
-  findAll() {
-    return this.appointmentsService.findAll();
+  findAll(@Query() queryDto: QueryAppointmentDto) {
+    return this.appointmentsService.findAll(queryDto);
   }
 
   @Get('me')
@@ -81,6 +83,8 @@ export class AppointmentsController {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('SUPERADMIN', 'ADMIN')
   remove(@Param('id', ParseMongoIdPipe) id: string) {
     return this.appointmentsService.remove(id);
   }

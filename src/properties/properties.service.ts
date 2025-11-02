@@ -138,7 +138,12 @@ export class PropertiesService {
       filterQuery.status = status;
     } else {
       filterQuery.status = {
-        $in: [PropertyStatus.SALE, PropertyStatus.RENT],
+        $in: [
+          PropertyStatus.SALE,
+          PropertyStatus.RENT,
+          PropertyStatus.SOLD,
+          PropertyStatus.RENTED,
+        ],
       };
     }
 
@@ -157,11 +162,16 @@ export class PropertiesService {
     }
 
     if (search) {
-      filterQuery.$text = { $search: search };
+      const searchRegex = { $regex: new RegExp(search, 'i') };
 
-      projection.score = { $meta: 'textScore' };
+      filterQuery.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { 'address.city': searchRegex },
+        { 'address.address': searchRegex },
+      ];
 
-      sortQuery = { score: { $meta: 'textScore' } };
+      sortQuery = { featured: -1, createdAt: -1 };
     }
 
     const skip = (page - 1) * limit;

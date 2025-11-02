@@ -1,6 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Exclude, Transform } from 'class-transformer';
 
+export enum UserRole {
+  SUPERADMIN = 'SUPERADMIN',
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+}
+
 @Schema()
 export class User {
   @Transform(({ value }) => value.toString())
@@ -30,10 +36,10 @@ export class User {
 
   @Prop({
     type: [String],
-    enum: ['USER', 'ADMIN', 'SUPERADMIN'],
-    default: ['USER'],
+    enum: UserRole,
+    default: [UserRole.USER],
   })
-  roles: string[];
+  roles: UserRole[];
 
   @Exclude()
   @Prop({ type: String, required: false, select: false })
