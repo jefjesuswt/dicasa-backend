@@ -3,10 +3,10 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { MailService } from 'src/mail/mail.service';
-import { UsersService } from 'src/users/users.service';
+import { MailService } from '../mail/mail.service';
+import { UsersService } from '../users/users.service';
 import { CreateContactDto } from './dto/create-contact.dto';
-import { UserRole } from 'src/users/entities/user.entity';
+import { UserRole } from '../users/entities/user.entity';
 
 @Injectable()
 export class ContactService {
