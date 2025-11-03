@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -22,6 +23,8 @@ import { UpdateMyInfoDto } from './dto/update-my-info.dto';
 import { ChangePasswordDto } from '../auth/dto/changePassword.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 import { PaginatedUserResponse } from './interfaces/paginated-user-response.interface';
+import { Property } from 'src/properties/entities/property.entity';
+import { Appointment } from 'src/appointments/entities/appointment.entity';
 
 @Injectable()
 export class UsersService {
@@ -29,6 +32,8 @@ export class UsersService {
   constructor(
     private storageService: StorageService,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Property.name) private propertyModel: Model<Property>,
+    @InjectModel(Appointment.name) private appointmentModel: Model<Appointment>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -76,7 +81,7 @@ export class UsersService {
   }
 
   async findAll(queryDto: QueryUserDto): Promise<PaginatedUserResponse> {
-    const { page = 1, limit = 10, search, role } = queryDto;
+    const { page = 1, limit = 10, search, role, isActive } = queryDto;
 
     const filterQuery: any = {};
 
@@ -92,6 +97,11 @@ export class UsersService {
     if (role) {
       filterQuery.roles = role;
     }
+
+    if (isActive !== undefined) {
+      filterQuery.isActive = isActive;
+    }
+
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
@@ -262,13 +272,36 @@ export class UsersService {
   }
 
   async remove(id: string): Promise<{ message: string }> {
-    const result = await this.userModel.findByIdAndDelete(id);
-
-    if (!result) {
-      throw new NotFoundException(`User with ID '${id}' not found.`); // Usa NotFoundException
+    const propertyCount = await this.propertyModel.countDocuments({
+      agent: id,
+    });
+    if (propertyCount > 0) {
+      throw new ConflictException(
+        `Este agente no puede ser eliminado. Aún tiene ${propertyCount} propiedad(es) asignada(s). Por favor, reasígnelas primero.`,
+      );
     }
 
-    return { message: `User with ID '${id}' successfully deleted.` };
+    const appointmentCount = await this.appointmentModel.countDocuments({
+      agent: id,
+      status: { $in: ['pending', 'contacted'] },
+    });
+    if (appointmentCount > 0) {
+      throw new ConflictException(
+        `Este agente no puede ser eliminado. Aún tiene ${appointmentCount} cita(s) pendiente(s). Por favor, reasígnelas primero.`,
+      );
+    }
+
+    const result = await this.userModel.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true },
+    );
+
+    if (!result) {
+      throw new NotFoundException(`User with ID '${id}' not found.`);
+    }
+
+    return { message: `User with ID '${id}' desactivado exitosamente.` };
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)

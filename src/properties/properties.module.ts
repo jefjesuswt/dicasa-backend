@@ -10,9 +10,9 @@ import { LocationModule } from '../location/location.module';
 
 @Module({
   imports: [
-    AuthModule,
+    forwardRef(() => AuthModule),
     LocationModule,
-    UsersModule,
+    forwardRef(() => UsersModule),
     StorageModule,
     MongooseModule.forFeature([{ name: 'Property', schema: PropertySchema }]),
   ],

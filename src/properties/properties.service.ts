@@ -232,7 +232,6 @@ export class PropertiesService {
   }
 
   // LOCATION
-  //
   private validateLocation(address: { state: string; city: string }): void {
     const { state, city } = address;
 
