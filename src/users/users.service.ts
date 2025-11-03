@@ -23,8 +23,8 @@ import { UpdateMyInfoDto } from './dto/update-my-info.dto';
 import { ChangePasswordDto } from '../auth/dto/changePassword.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 import { PaginatedUserResponse } from './interfaces/paginated-user-response.interface';
-import { Property } from 'src/properties/entities/property.entity';
-import { Appointment } from 'src/appointments/entities/appointment.entity';
+import { Property } from '../properties/entities/property.entity';
+import { Appointment } from '../appointments/entities/appointment.entity';
 
 @Injectable()
 export class UsersService {

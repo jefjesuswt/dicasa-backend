@@ -5,16 +5,16 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './entities/user.entity';
 import { AuthModule } from '../auth/auth.module';
 import { StorageModule } from '../storage/storage.module';
-import { PropertiesModule } from 'src/properties/properties.module';
-import { AppointmentsModule } from 'src/appointments/appointments.module';
+import { PropertiesModule } from '../properties/properties.module';
+import { AppointmentsModule } from '../appointments/appointments.module';
 import {
   Property,
   PropertySchema,
-} from 'src/properties/entities/property.entity';
+} from '../properties/entities/property.entity';
 import {
   Appointment,
   AppointmentSchema,
-} from 'src/appointments/entities/appointment.entity';
+} from '../appointments/entities/appointment.entity';
 
 @Module({
   imports: [
