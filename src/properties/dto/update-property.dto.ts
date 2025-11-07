@@ -35,13 +35,15 @@ export class UpdatePropertyDto {
   @ArrayMinSize(1)
   images: string[];
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  bedrooms: number;
+  bedrooms?: number;
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  bathrooms: number;
+  bathrooms?: number;
 
   @IsNumber()
   @IsPositive()

@@ -71,11 +71,11 @@ export class Property {
   @Prop({ type: [String], required: true, default: [] })
   images: string[];
 
-  @Prop({ required: true })
-  bedrooms: number;
+  @Prop({ required: false, default: 0 })
+  bedrooms?: number;
 
-  @Prop({ required: true })
-  bathrooms: number;
+  @Prop({ required: false, default: 0 })
+  bathrooms?: number;
 
   @Prop({ required: true })
   area: number; // en m²
