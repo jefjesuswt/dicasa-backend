@@ -3,21 +3,22 @@ name: CI/CD - Build, Push, and Deploy
 on:
   push:
     branches:
-      - main # Se ejecuta solo cuando haces 'push' a la rama 'main'
+      - main
 
 permissions:
   contents: read
   packages: write
+  id-token: write # (Necesario para la autenticación de AWS)
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      # 1. Clonar tu repositorio (¡No cambia!)
+      # 1. Clonar (No cambia)
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Iniciar sesión en GHCR (¡No cambia!)
+      # 2. Login a GHCR (No cambia)
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -25,7 +26,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 3. Construir y subir la imagen (¡No cambia!)
+      # 3. Build y Push (No cambia)
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -36,27 +37,24 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/dicasa-backend:latest
             ghcr.io/${{ github.repository_owner }}/dicasa-backend:${{ github.sha }}
 
-      # 4. ¡PASO CORREGIDO! Desplegar en EC2 por SSH
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
+      # 4. Configurar Credenciales de AWS
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            # 1. Ir a la carpeta del proyecto
-            cd dicasa-backend
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # (O la región donde está tu EC2)
 
-            # 2. Obtener los últimos cambios (por si cambias Caddyfile o docker-compose.yml)
-            git pull
-
-            # 3. Descargar la nueva imagen 'app' que acabamos de subir a GHCR
-            docker compose pull app
-
-            # 4. Reiniciar la app (Caddy sigue corriendo)
-            # --no-deps le dice que no toque a Caddy
-            docker compose up -d --no-deps app
-
-            # 5. Limpiar imágenes viejas de Docker
-            docker image prune -f
+      # 5. Enviar Comando de Despliegue vía SSM
+      - name: Send Deploy Command to EC2
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[
+              \"cd /home/jeffrey/dicasa-backend\",
+              \"git pull\",
+              \"docker compose pull app\",
+              \"docker compose up -d --no-deps app\",
+              \"docker image prune -f\"
+            ]"
