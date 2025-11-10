@@ -15,11 +15,13 @@ import {
   Appointment,
   AppointmentSchema,
 } from '../appointments/entities/appointment.entity';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
     forwardRef(() => AppointmentsModule),
     forwardRef(() => PropertiesModule),
+    AuditModule,
     StorageModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },

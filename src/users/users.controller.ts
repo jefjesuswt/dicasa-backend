@@ -32,6 +32,7 @@ import { UpdateMyInfoDto } from './dto/update-my-info.dto';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id.pipe';
 import { ChangePasswordDto } from '../auth/dto/changePassword.dto';
 import { QueryUserDto } from './dto/query-user.dto';
+import { ActiveUser } from '../auth/decorators/active-user.decorator';
 
 @UseGuards(AuthGuard)
 @Controller('users')
@@ -46,12 +47,12 @@ export class UsersController {
   @UseInterceptors(ClassSerializerInterceptor)
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  create(@Body() createUserDto: CreateUserDto, @ActiveUser() user: User) {
+    return this.usersService.create(createUserDto, user._id);
   }
 
   @Put('/me/picture')
-  @UseInterceptors(FileInterceptor('profileImage')) // Matches frontend field name
+  @UseInterceptors(FileInterceptor('profileImage'))
   @UseInterceptors(ClassSerializerInterceptor)
   async uploadProfilePicture(
     @Request() req: any,
@@ -104,16 +105,20 @@ export class UsersController {
   @UseInterceptors(ClassSerializerInterceptor)
   @UseGuards(RolesGuard)
   @Roles('SUPERADMIN')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.updateUser(id, updateUserDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @ActiveUser() user: User,
+  ) {
+    return this.usersService.updateUser(id, user._id, updateUserDto);
   }
 
   @Delete('/superadmin/:id')
   @UseInterceptors(ClassSerializerInterceptor)
   @UseGuards(RolesGuard)
   @Roles('SUPERADMIN')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  remove(@Param('id') id: string, @ActiveUser() user: User) {
+    return this.usersService.remove(id, user._id);
   }
 
   @Post('change-password')

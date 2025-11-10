@@ -97,14 +97,15 @@ export class PropertiesController {
   update(
     @Param('id', ParseMongoIdPipe) id: string,
     @Body() updatePropertyDto: UpdatePropertyDto,
+    @ActiveUser() agent: User,
   ) {
-    return this.propertiesService.update(id, updatePropertyDto);
+    return this.propertiesService.update(id, agent._id, updatePropertyDto);
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'SUPERADMIN')
-  remove(@Param('id', ParseMongoIdPipe) id: string) {
-    return this.propertiesService.remove(id);
+  remove(@Param('id', ParseMongoIdPipe) id: string, @ActiveUser() agent: User) {
+    return this.propertiesService.remove(id, agent._id);
   }
 }

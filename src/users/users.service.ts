@@ -25,18 +25,20 @@ import { QueryUserDto } from './dto/query-user.dto';
 import { PaginatedUserResponse } from './interfaces/paginated-user-response.interface';
 import { Property } from '../properties/entities/property.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
   constructor(
     private storageService: StorageService,
+    private readonly auditService: AuditService,
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Property.name) private propertyModel: Model<Property>,
     @InjectModel(Appointment.name) private appointmentModel: Model<Appointment>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto, userId?: string): Promise<User> {
     const { email, phoneNumber, password } = createUserDto;
 
     const existingUser = await this.userModel.findOne({
@@ -66,6 +68,12 @@ export class UsersService {
       await user.save();
 
       const { password: _, ...result } = plainToInstance(User, user.toObject());
+
+      this.auditService.logAction({
+        userId: userId || '',
+        action: 'CREATE_USER',
+        resourceId: user._id,
+      });
       return result as User;
     } catch (error) {
       if (error.code === 11000 && error.keyValue) {
@@ -171,6 +179,7 @@ export class UsersService {
     if (!user) {
       throw new BadRequestException('User not found');
     }
+
     return user;
   }
 
@@ -227,7 +236,11 @@ export class UsersService {
     return plainToInstance(User, updatedUser.toObject());
   }
 
-  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateUser(
+    id: string,
+    userId: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     if (updateUserDto.email || updateUserDto.phoneNumber) {
       const existingUser = await this.userModel.findOne({
         $or: [
@@ -264,6 +277,12 @@ export class UsersService {
       throw new NotFoundException(`User with ID '${id}' not found.`);
     }
 
+    this.auditService.logAction({
+      userId: userId,
+      action: 'UPDATE_USER',
+      resourceId: id,
+    });
+
     const { password: _, ...result } = plainToInstance(
       User,
       updatedUser.toObject(),
@@ -271,7 +290,7 @@ export class UsersService {
     return result as User;
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string, userId: string): Promise<{ message: string }> {
     const propertyCount = await this.propertyModel.countDocuments({
       agent: id,
     });
@@ -300,6 +319,12 @@ export class UsersService {
     if (!result) {
       throw new NotFoundException(`User with ID '${id}' not found.`);
     }
+
+    this.auditService.logAction({
+      userId: userId,
+      action: 'REMOVE_USER',
+      resourceId: id,
+    });
 
     return { message: `User with ID '${id}' desactivado exitosamente.` };
   }

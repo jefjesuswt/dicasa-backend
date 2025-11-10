@@ -7,6 +7,7 @@ import { PropertySchema } from './entities/property.entity';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { LocationModule } from '../location/location.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LocationModule } from '../location/location.module';
     forwardRef(() => UsersModule),
     StorageModule,
     MongooseModule.forFeature([{ name: 'Property', schema: PropertySchema }]),
+    AuditModule,
   ],
   controllers: [PropertiesController],
   providers: [PropertiesService],

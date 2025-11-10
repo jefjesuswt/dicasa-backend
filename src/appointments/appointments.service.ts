@@ -19,6 +19,7 @@ import { plainToInstance } from 'class-transformer';
 import { UsersService } from '../users/users.service';
 import { QueryAppointmentDto } from './dto/query-appointment-dto';
 import { PaginatedAppointmentResponse } from './interfaces/paginated-appointment.response.interface';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -30,9 +31,11 @@ export class AppointmentsService {
 
     @InjectModel(Property.name)
     private readonly propertyModel: Model<Property>,
+
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
     private readonly usersService: UsersService,
+    private readonly auditService: AuditService,
   ) {}
 
   async create(
@@ -280,6 +283,7 @@ export class AppointmentsService {
 
   async update(
     id: string,
+    agentId: string,
     updateAppointmentDto: UpdateAppointmentDto,
   ): Promise<Appointment> {
     const { appointmentDate } = updateAppointmentDto;
@@ -330,11 +334,18 @@ export class AppointmentsService {
       { path: 'property', select: 'title price' },
     ]);
 
+    this.auditService.logAction({
+      userId: agentId,
+      action: 'UPDATE_APPOINTMENT',
+      resourceId: id,
+    });
+
     return plainToInstance(Appointment, populatedDoc.toObject());
   }
 
   async reassignAgent(
     appointmentId: string,
+    agentId: string,
     newAgentId: string,
   ): Promise<Appointment> {
     this.logger.log(
@@ -374,19 +385,17 @@ export class AppointmentsService {
       this.logger.warn(
         `El agente ${newAgentId} ya está asignado a esta cita. No se requiere acción.`,
       );
-      // Devolvemos la cita populada, tal como lo haría findOne
       return this.findOne(appointmentId);
     }
 
     // 4. ¡CRÍTICO! Verificar conflictos de horario para el *nuevo* agente
-    // Reutilizamos la lógica de tu método create()
     const newAppointmentTime = appointment.appointmentDate;
     const windowInMs = 3599000;
     const lowerLimit = new Date(newAppointmentTime.getTime() - windowInMs);
     const upperLimit = new Date(newAppointmentTime.getTime() + windowInMs);
 
     const conflict = await this.appointmentModel.findOne({
-      agent: newAgentId, // <--- Chequear contra el NUEVO agente
+      agent: newAgentId,
       appointmentDate: {
         $gt: lowerLimit,
         $lt: upperLimit,
@@ -406,7 +415,6 @@ export class AppointmentsService {
       `Cita ${appointmentId} reasignada exitosamente al agente ${newAgentId}.`,
     );
 
-    // 5. Actualizar la cita
     const updatedAppointment = await this.appointmentModel.findByIdAndUpdate(
       appointmentId,
       { agent: newAgentId },
@@ -422,15 +430,27 @@ export class AppointmentsService {
       { path: 'property', select: 'title price' },
     ]);
 
+    this.auditService.logAction({
+      userId: agentId,
+      action: 'REASSIGN_AGENT',
+      resourceId: appointmentId,
+    });
+
     return plainToInstance(Appointment, populatedDoc.toObject());
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string, agentId: string): Promise<{ message: string }> {
     const result = await this.appointmentModel.findByIdAndDelete(id);
 
     if (!result) {
       throw new NotFoundException(`Cita con ID '${id}' no encontrada.`);
     }
+
+    this.auditService.logAction({
+      userId: agentId,
+      action: 'REMOVE_APPOINTMENT',
+      resourceId: id,
+    });
 
     return { message: `Cita con ID '${id}' eliminada exitosamente.` };
   }

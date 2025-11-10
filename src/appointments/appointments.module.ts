@@ -11,6 +11,7 @@ import {
   PropertySchema,
 } from '../properties/entities/property.entity';
 import { AuthModule } from '../auth/auth.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AuthModule } from '../auth/auth.module';
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
     PropertiesModule,
+    AuditModule,
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],

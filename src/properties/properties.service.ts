@@ -19,6 +19,7 @@ import { LocationService } from '../location/location.service';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { PaginatedPropertyResponse } from './interaces/paginated-property-response.interface';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class PropertiesService {
@@ -27,6 +28,7 @@ export class PropertiesService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly storageService: StorageService,
     private readonly locationService: LocationService,
+    private readonly auditService: AuditService,
   ) {}
 
   private logger = new Logger(PropertiesService.name);
@@ -62,15 +64,26 @@ export class PropertiesService {
 
     const savedProperty = await newProperty.save();
 
+    this.auditService.logAction({
+      userId: createPropertyDto.agentId,
+      action: 'CREATE_PROPERTY',
+      resourceId: newProperty._id,
+    });
+
     await savedProperty.populate({
       path: 'agent',
       select: '-password',
     });
     await this.invalidatePropertiesCache();
+
     return plainToInstance(Property, savedProperty.toObject());
   }
 
-  async update(id: string, updatePropertyDto: UpdatePropertyDto) {
+  async update(
+    id: string,
+    agentId: string,
+    updatePropertyDto: UpdatePropertyDto,
+  ) {
     if (updatePropertyDto.address) {
       this.validateLocation(updatePropertyDto.address);
     }
@@ -80,7 +93,7 @@ export class PropertiesService {
         id,
         {
           ...updatePropertyDto,
-          agent: updatePropertyDto.agentId,
+          agent: agentId,
         },
         { new: true },
       )
@@ -90,6 +103,12 @@ export class PropertiesService {
     if (!updatedProperty) {
       throw new NotFoundException(`Propiedad con ID '${id}' no encontrada.`);
     }
+
+    this.auditService.logAction({
+      userId: updatePropertyDto.agentId,
+      action: 'UPDATE_PROPERTY',
+      resourceId: id,
+    });
     await this.invalidatePropertiesCache();
     return plainToInstance(Property, updatedProperty.toObject());
   }
@@ -212,7 +231,7 @@ export class PropertiesService {
     return plainToInstance(Property, property.toObject());
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string, agentId: string): Promise<{ message: string }> {
     const property = await this.propertyModel.findById(id);
 
     if (!property) {
@@ -228,6 +247,12 @@ export class PropertiesService {
       await Promise.all(deletePromises);
     }
     await this.invalidatePropertiesCache();
+
+    this.auditService.logAction({
+      userId: agentId,
+      action: 'REMOVE_PROPERTY',
+      resourceId: id,
+    });
     return { message: `Propiedad con ID '${id}' eliminada exitosamente.` };
   }
 

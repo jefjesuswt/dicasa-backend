@@ -64,8 +64,9 @@ export class AppointmentsController {
   update(
     @Param('id', ParseMongoIdPipe) id: string,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
+    @ActiveUser() agent: User,
   ) {
-    return this.appointmentsService.update(id, updateAppointmentDto);
+    return this.appointmentsService.update(id, agent._id, updateAppointmentDto);
   }
 
   @Patch(':id/reassign-agent')
@@ -75,9 +76,11 @@ export class AppointmentsController {
   reassignAgent(
     @Param('id', ParseMongoIdPipe) id: string,
     @Body() reassignAgentDto: ReassignAgentDto,
+    @ActiveUser() agent: User,
   ) {
     return this.appointmentsService.reassignAgent(
       id,
+      agent._id,
       reassignAgentDto.newAgentId,
     );
   }
@@ -85,7 +88,7 @@ export class AppointmentsController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('SUPERADMIN', 'ADMIN')
-  remove(@Param('id', ParseMongoIdPipe) id: string) {
-    return this.appointmentsService.remove(id);
+  remove(@Param('id', ParseMongoIdPipe) id: string, @ActiveUser() agent: User) {
+    return this.appointmentsService.remove(id, agent._id);
   }
 }
