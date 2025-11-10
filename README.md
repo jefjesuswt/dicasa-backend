@@ -1,3 +1,15 @@
+<p align="center">
+  <a href="https://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-all.svg" width="200" alt="Nest Logo" /></a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+  <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+  <a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+  <a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master" alt="Coverage" /></a>
+  <a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/discord/926828221233229824?color=5865F2&label=discord&logo=discord&logoColor=white" alt="Discord" /></a>
+</p>
+
 # Dicasa - Real Estate Backend
 
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-blue?style=for-the-badge&logo=githubactions)
@@ -29,16 +41,19 @@ Backend for Dicasa, a real estate management system. Built with [NestJS](https:/
 
 - Node.js (v18 or higher)
 - Bun (v1 or higher)
+- Docker (for deployment)
 
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/jefjesuswt/dicasa-backend.git
    cd dicasa-backend
    ```
 
 2. Install the dependencies:
+
    ```bash
    # Using Bun (recommended)
    bun install
@@ -76,6 +91,27 @@ Backend for Dicasa, a real estate management system. Built with [NestJS](https:/
 
 The application will be running at `http://localhost:3000`.
 
+## 🐳 Deployment
+
+This project is configured for easy deployment using Docker.
+
+1.  **Build the Docker image:**
+
+    ```bash
+    docker build -t dicasa-backend .
+    ```
+
+2.  **Run the Docker container:**
+    ```bash
+    docker run -p 3000:3000 --env-file .env dicasa-backend
+    ```
+
+The `docker-compose.yml` file is also provided for a more robust setup, including a Caddy reverse proxy for automatic HTTPS.
+
+```bash
+docker-compose up -d
+```
+
 ## 🛠️ Useful Commands
 
 - **Start development server (with watch mode)**: `bun run start:dev`
@@ -103,24 +139,32 @@ src/
 └── data/                 # Static data (e.g., venezuela.json)
 ```
 
+## 📖 API Documentation
+
+This project uses NestJS, which can be integrated with Swagger for automatic API documentation generation. To enable this, you would typically uncomment the relevant lines in `main.ts`.
+
+Once enabled, the API documentation would be available at `http://localhost:3000/api`.
+
 ## 🎨 Technologies Used
 
-- [NestJS](https://nestjs.com/) - Web application framework
-- [MongoDB](https://www.mongodb.com/) - NoSQL Database
-- [Mongoose](https://mongoosejs.com/) - MongoDB object modeling tool
-- [Redis](https://redis.io/) / [Valkey](https://valkey.io/) - In-memory data store for caching
-- [TypeScript](https://www.typescriptlang.org/) - Typed language that compiles to JavaScript
-- [JWT](https://jwt.io/) - For authentication
-- [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - S3-compatible object storage
-- [Nodemailer](https://nodemailer.com/) - For sending emails
-- [Handlebars](https://handlebarsjs.com/) - For email templates
-- [Bun](https://bun.sh/) - JavaScript runtime and toolkit
-- [Docker](https://www.docker.com/) - For containerization
+- **[NestJS](https://nestjs.com/)**: A progressive Node.js framework for building efficient, reliable and scalable server-side applications.
+- **[MongoDB](https://www.mongodb.com/)**: A NoSQL database for storing application data.
+- **[Mongoose](https://mongoosejs.com/)**: An elegant mongodb object modeling for node.js.
+- **[Redis](https://redis.io/) / [Valkey](https://valkey.io/)**: In-memory data structure store, used as a database, cache and message broker.
+- **[TypeScript](https://www.typescriptlang.org/)**: A typed superset of JavaScript that compiles to plain JavaScript.
+- **[JWT](https://jwt.io/)**: JSON Web Tokens are an open, industry standard RFC 7519 method for representing claims securely between two parties.
+- **[Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/)**: S3-compatible object storage, without the egress fees.
+- **[Nodemailer](https://nodemailer.com/)**: A module for Node.js applications to allow easy as cake email sending.
+- **[Handlebars](https://handlebarsjs.com/)**: A popular templating engine.
+- **[Bun](https://bun.sh/)**: A fast JavaScript all-in-one toolkit.
+- **[Docker](https://www.docker.com/)**: A platform for developing, shipping, and running applications in containers.
 
 ## 📄 License
 
-This project is under the MIT License - see the `LICENSE` file for more details.
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
 
 ---
 
-Developed with ❤️ by [Jeffrey Jesús Jimenez Malave](https://github.com/jefjesuswt)
+<p align="center">
+  Developed with ❤️ by <a href="https://github.com/jefjesuswt" target="_blank">Jeffrey Jesús Jimenez Malave</a>
+</p>
